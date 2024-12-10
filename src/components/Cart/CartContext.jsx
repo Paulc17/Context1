@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 // Crear contexto para el carrito
 const CartContext = createContext();
@@ -10,7 +10,16 @@ export const useCart = () => {
 
 // Componente de proveedor del carrito
 const CartProvider = ({ children }) => {
-    const [cart, setCart] = useState([]);
+    // Leer carrito desde localStorage al inicializar
+    const [cart, setCart] = useState(() => {
+        const storedCart = localStorage.getItem("cart");
+        return storedCart ? JSON.parse(storedCart) : [];
+    });
+
+    // Sincronizar carrito con localStorage
+    useEffect(() => {
+        localStorage.setItem("cart", JSON.stringify(cart));
+    }, [cart]);
 
     // Función para agregar un producto al carrito
     const addToCart = (item, quantity = 1) => {
@@ -29,14 +38,13 @@ const CartProvider = ({ children }) => {
             return [...prevCart, { ...item, quantity, price: item.price }];
         });
     };
-    
-    
-    
+
     // Función para eliminar un producto del carrito
     const removeFromCart = (id) => {
         setCart((prevCart) => prevCart.filter((item) => item.id !== id));
     };
 
+    // Función para vaciar el carrito
     const clearCart = () => {
         setCart([]);
     };
@@ -44,15 +52,13 @@ const CartProvider = ({ children }) => {
     // Calcular el precio total
     const getTotalPrice = () => {
         return cart.reduce((total, item) => {
-            // Verificacion si son dos numeros
-            if (typeof item.price !== 'number' || typeof item.quantity !== 'number') {
-                console.error('Precio o cantidad no son números válidos', item);
+            if (typeof item.price !== "number" || typeof item.quantity !== "number") {
+                console.error("Precio o cantidad no son números válidos", item);
                 return total; 
             }
             return total + item.price * item.quantity;
-        }, 0); // Establece el valor inicial de la acumulación como 0
+        }, 0);
     };
-    
 
     return (
         <CartContext.Provider
@@ -65,4 +71,5 @@ const CartProvider = ({ children }) => {
 
 // Exportar CartProvider como exportación por defecto
 export default CartProvider;
+
 
